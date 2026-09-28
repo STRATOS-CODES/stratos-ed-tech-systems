@@ -1,0 +1,31 @@
+name: Import site files
+
+on:
+  workflow_dispatch:
+    inputs:
+      zip_url:
+        description: Public URL of the site zip
+        required: true
+        type: string
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download and unpack the site
+        run: |
+          curl -fL -o site.zip "${{ inputs.zip_url }}"
+          unzip -o site.zip -d site-import
+          cp -R site-import/. .
+          rm -rf site.zip site-import
+          ls -R
+      - name: Commit the files
+        run: |
+          git config user.name stratos-import
+          git config user.email actions@users.noreply.github.com
+          git add -A
+          git commit -m "Publish Stratos Ed Tech Systems website" || echo "no changes to commit"
+          git push
